@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +14,7 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -28,9 +30,13 @@ import jcifs.smb.SmbFile;
 import jcifs.smb.SmbFileOutputStream;
 
 public class ScrollingActivity extends AppCompatActivity {
+    public static final int BUFFSIZE = 5 * 1024;
     EditText text_name;
     EditText text_pass;
     EditText text_server;
+    ProgressBar progressBar;
+    int index = 0;
+    Handler handler = new Handler();
     File file;
     SmbFile smbFile;
     boolean flag = false;
@@ -69,10 +75,20 @@ public class ScrollingActivity extends AppCompatActivity {
                                 smbFile.createNewFile();
                             SmbFileOutputStream out = new SmbFileOutputStream(smbFile);
                             OutputStream fout = new BufferedOutputStream(out);
-                            byte b[] = new byte[5 * 1024];
+                            byte b[] = new byte[BUFFSIZE];
                             int len;
+                            index = 0;
+                            long filelen = file.length();
+                            progressBar.setMax((int) (filelen));
                             while ((len = in.read(b)) != -1) {
                                 fout.write(b, 0, len);
+                                index += BUFFSIZE;
+                                handler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        progressBar.setProgress(index);
+                                    }
+                                });
                             }
                             fout.flush();
                             fout.close();
@@ -102,6 +118,7 @@ public class ScrollingActivity extends AppCompatActivity {
         text_server = (EditText) findViewById(R.id.editText_server);
         text_name = (EditText) findViewById(R.id.editText_name);
         text_pass = (EditText) findViewById(R.id.editText_pass);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         SharedPreferences read = getSharedPreferences("lock", MODE_PRIVATE);
         text_server.setText(read.getString("server", "Server address"));
