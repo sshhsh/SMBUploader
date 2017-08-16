@@ -1,5 +1,6 @@
 package com.example.zhucebiao.uploader;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -8,9 +9,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 
 public class ScrollingActivity extends AppCompatActivity {
-    View ab;
+    EditText text_name;
+    EditText text_pass;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,11 +26,22 @@ public class ScrollingActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                String name = text_name.getText().toString().trim();
+                String pass = text_pass.getText().toString();
+
+                SharedPreferences.Editor editor = getSharedPreferences("lock", MODE_PRIVATE).edit();
+                editor.putString("name", name);
+                editor.putString("pass", pass);
+                editor.commit();
             }
         });
-        ab = fab.getRootView();
+
+        text_name = (EditText) findViewById(R.id.editText_name);
+        text_pass = (EditText) findViewById(R.id.editText_pass);
+
+        SharedPreferences read = getSharedPreferences("lock", MODE_PRIVATE);
+        text_name.setText(read.getString("name", "Samba address"));
+        text_pass.setText(read.getString("pass", "Password"));
     }
 
     @Override
@@ -46,7 +60,7 @@ public class ScrollingActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Snackbar.make(ab, "Replace with your own action", Snackbar.LENGTH_LONG)
+            Snackbar.make(findViewById(R.id.fab), "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show();
             return true;
         }
