@@ -1,15 +1,20 @@
 package com.example.zhucebiao.uploader;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+
+import java.io.File;
 
 public class ScrollingActivity extends AppCompatActivity {
     EditText text_name;
@@ -21,6 +26,20 @@ public class ScrollingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scrolling);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        Intent intent = getIntent();
+        String action = getIntent().getAction();
+        Log.e("action", action);
+        if (Intent.ACTION_VIEW.equals(action)) {
+            Uri uri = intent.getData();
+            if (uri != null) {
+                Log.e("uri", uri.getPath());
+                File file = new File(uri.getPath());
+                if (file.exists()) {
+                    Log.e("uri", "exist");
+
+                } else Log.e("uri", "null");
+            }
+        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
