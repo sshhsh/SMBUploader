@@ -66,6 +66,8 @@ public class ScrollingActivity extends AppCompatActivity {
                         editor.apply();
 
                         if (flag) try {
+                            flag = false;
+                            showMessage("Uploading to " + server);
                             String smbUrl = "smb://" + name + ":" + pass + "@" + server + "/temp/filesFromUploader/" + file.getName();
                             Log.e("uri", smbUrl);
                             FileInputStream in = new FileInputStream(file);
@@ -92,6 +94,7 @@ public class ScrollingActivity extends AppCompatActivity {
                             }
                             fout.flush();
                             fout.close();
+                            showMessage("Uploading to " + server + " is completed!");
                         } catch (FileNotFoundException e) {
                             e.printStackTrace();
                             showMessage("FileNotFoundException");
@@ -107,6 +110,9 @@ public class ScrollingActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             e.printStackTrace();
                             showMessage("IOException");
+                        }
+                        else {
+                            showMessage("Nothing to upload, saving the properties");
                         }
                     }
                 }).start();
