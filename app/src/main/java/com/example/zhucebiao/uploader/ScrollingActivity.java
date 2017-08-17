@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
@@ -39,7 +40,8 @@ public class ScrollingActivity extends AppCompatActivity {
     Handler handler = new Handler();
     File file;
     SmbFile smbFile;
-    boolean flag = false;
+    int flag = 0;
+    InputStream dataFromContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,8 +67,8 @@ public class ScrollingActivity extends AppCompatActivity {
                         editor.putString("pass", pass);
                         editor.apply();
 
-                        if (flag) try {
-                            flag = false;
+                        if (flag == 1) try {
+                            flag = 0;
                             showMessage("Uploading to " + server);
                             String smbUrl = "smb://" + name + ":" + pass + "@" + server + "/temp/filesFromUploader/" + file.getName();
                             Log.e("uri", smbUrl);
@@ -114,6 +116,10 @@ public class ScrollingActivity extends AppCompatActivity {
                         else {
                             showMessage("Nothing to upload, saving the properties");
                         }
+
+                        if (flag == 2) {
+                            flag = 0;
+                        }
                     }
                 }).start();
 
@@ -132,7 +138,8 @@ public class ScrollingActivity extends AppCompatActivity {
         text_pass.setText(read.getString("pass", "Password"));
 
         Intent intent = getIntent();
-        String action = getIntent().getAction();
+        String action = intent.getAction();
+        String type = intent.getType();
         Log.e("action", action);
         if (Intent.ACTION_VIEW.equals(action)) {
             Uri uri = intent.getData();
@@ -141,10 +148,37 @@ public class ScrollingActivity extends AppCompatActivity {
                 file = new File(uri.getPath());
                 if (file.isFile() && file.exists()) {
                     Log.e("uri", "exist");
-                    flag = true;
+                    flag = 1;
                 } else {
                     Log.e("uri", "null");
-                    flag = false;
+                    flag = 0;
+                }
+            }
+        } else if (Intent.ACTION_SEND.equals(action) && type != null) {
+            Log.e("type", type);
+            if (type.startsWith("image/")) {
+                Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                try {
+                    dataFromContent = getContentResolver().openInputStream(uri);
+                    Log.e("content", dataFromContent.toString());
+                    flag = 2;
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                    showMessage("FileNotFoundException");
+                    flag = 0;
+                }
+            } else if (type.startsWith("application/")) {
+                Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                if (uri != null) {
+                    Log.e("uri", uri.getPath());
+                    file = new File(uri.getPath());
+                    if (file.isFile() && file.exists()) {
+                        Log.e("uri", "exist");
+                        flag = 1;
+                    } else {
+                        Log.e("uri", "null");
+                        flag = 0;
+                    }
                 }
             }
         }
@@ -166,8 +200,7 @@ public class ScrollingActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            Snackbar.make(findViewById(R.id.fab), "Replace with your own action", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
+            showMessage("This is stupid!");
             return true;
         }
         return super.onOptionsItemSelected(item);
