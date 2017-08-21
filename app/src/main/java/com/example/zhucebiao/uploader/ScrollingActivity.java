@@ -19,6 +19,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -40,13 +41,15 @@ public class ScrollingActivity extends AppCompatActivity {
     EditText text_name;
     EditText text_pass;
     EditText text_server;
+    TextView textView_type;
+    TextView textView_uri;
+    TextView textView_path;
     ProgressBar progressBar;
     int index = 0;
     Handler handler = new Handler();
     File file;
     SmbFile smbFile;
     int flag = 0;
-    InputStream dataFromContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +91,7 @@ public class ScrollingActivity extends AppCompatActivity {
                             byte b[] = new byte[BUFFSIZE];
                             int len;
                             index = 0;
-                            long filelen = file.length();
+                            long filelen = in.available();
                             progressBar.setMax((int) (filelen));
                             while ((len = in.read(b)) != -1) {
                                 fout.write(b, 0, len);
@@ -122,10 +125,6 @@ public class ScrollingActivity extends AppCompatActivity {
                         else {
                             showMessage("Nothing to upload, saving the properties");
                         }
-
-                        if (flag == 2) {
-                            flag = 0;
-                        }
                     }
                 }).start();
 
@@ -136,6 +135,9 @@ public class ScrollingActivity extends AppCompatActivity {
         text_server = (EditText) findViewById(R.id.editText_server);
         text_name = (EditText) findViewById(R.id.editText_name);
         text_pass = (EditText) findViewById(R.id.editText_pass);
+        textView_type = (TextView) findViewById(R.id.textView_type);
+        textView_uri = (TextView) findViewById(R.id.textView_uri);
+        textView_path = (TextView) findViewById(R.id.textView_path);
         progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
         SharedPreferences read = getSharedPreferences("lock", MODE_PRIVATE);
@@ -147,47 +149,23 @@ public class ScrollingActivity extends AppCompatActivity {
         String action = intent.getAction();
         String type = intent.getType();
         Log.e("action", action);
-        if (Intent.ACTION_VIEW.equals(action)) {
-            Uri uri = intent.getData();
-            if (uri != null) {
-                Log.e("uri", uri.getPath());
-                file = new File(uri.getPath());
-                if (file.isFile() && file.exists()) {
-                    Log.e("uri", "exist");
-                    flag = 1;
-                } else {
-                    Log.e("uri", "null");
-                    flag = 0;
+        if (Intent.ACTION_VIEW.equals(action) || Intent.ACTION_SEND.equals(action)) {
+            if (type == null) {
+                //doNothing
+            } else {
+                Uri uri = intent.getData();
+                if (uri == null) {
+                    uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
                 }
-            }
-        } else if (Intent.ACTION_SEND.equals(action) && type != null) {
-            Log.e("type", type);
-            if (type.startsWith("image/")) {
-                Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-                try {
-                    dataFromContent = getContentResolver().openInputStream(uri);
-                    Log.e("content", dataFromContent.toString());
-                    flag = 2;
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                    showMessage("FileNotFoundException");
-                    flag = 0;
-                }
-            } else if (type.startsWith("application/")) {
-                Uri uri = intent.getParcelableExtra(Intent.EXTRA_STREAM);
-                if (uri != null) {
-                    Log.e("uri", uri.getPath());
-                    file = new File(uri.getPath());
-                    if (file.isFile() && file.exists()) {
-                        Log.e("uri", "exist");
-                        flag = 1;
-                    } else {
-                        Log.e("uri", "null");
-                        flag = 0;
-                    }
-                }
+                String path = GetPathFromUri.getPath(this, uri);
+                textView_uri.setText(uri.toString());
+                textView_type.setText(type);
+                textView_path.setText(path);
+                file = new File(path);
+                flag = 1;
             }
         }
+
     }
 
     @Override
