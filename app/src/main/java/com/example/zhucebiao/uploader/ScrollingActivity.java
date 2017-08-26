@@ -151,7 +151,6 @@ public class ScrollingActivity extends AppCompatActivity {
         Log.e("action", action);
         if (Intent.ACTION_VIEW.equals(action) || Intent.ACTION_SEND.equals(action)) {
             if (type == null) {
-                //doNothing
             } else {
                 Uri uri = intent.getData();
                 if (uri == null) {
